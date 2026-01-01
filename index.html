@@ -4,197 +4,245 @@
   <meta charset="UTF-8" />
   <title>匯率換算｜工具箱</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- 共用樣式：如果你已有 assets/styles.css，就用下面這行 -->
-  <link rel="stylesheet" href="../assets/styles.css" />
+
+  <!-- Apple 風格玻璃擬態 -->
   <style>
-    .rate-row {
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f1f5f9;
+      backdrop-filter: blur(20px);
+    }
+
+    .header {
+      padding: 20px;
+      text-align: center;
+      color: #f8fafc;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .glass-box {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(25px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.15);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .title {
+      font-size: 20px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .desc {
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+    }
+
+    .row {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
+      gap: 10px;
       margin-bottom: 12px;
     }
-    .rate-row input,
-    .rate-row select {
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
-      font-family: inherit;
-    }
-    .rate-row input {
-      flex: 1 1 140px;
-    }
-    .rate-row select {
-      flex: 0 0 120px;
-    }
-    .result-box {
-      margin-top: 16px;
+
+    input, select {
+      flex: 1;
       padding: 12px;
-      border-radius: 10px;
-      background: #ffffff;
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
-      font-size: 14px;
-      color: #111827;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: #f1f5f9;
+      font-size: 15px;
+      outline: none;
+      backdrop-filter: blur(10px);
     }
-    .result-main {
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: #38bdf8;
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #7dd3fc;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px);
       font-size: 18px;
       font-weight: 600;
-      margin-bottom: 4px;
+      text-align: center;
     }
-    .result-sub {
+
+    .sub {
       font-size: 12px;
-      color: #6b7280;
+      color: #cbd5e1;
+      margin-top: 6px;
+      text-align: center;
     }
-    .small-link {
+
+    .status {
       font-size: 12px;
-      color: #2563eb;
-      text-decoration: none;
+      margin-top: 10px;
+      text-align: center;
     }
   </style>
 </head>
+
 <body>
-  <header class="header">
-    <div>
-      <div class="header-title">太陽匯率換算</div>
-      <div class="header-subtitle">支援主流貨幣的即時匯率查詢</div>
-    </div>
-    <a href="../index.html" style="color:#9ca3af;font-size:13px;text-decoration:none;">返回首頁</a>
-  </header>
+  <div class="header">匯率換算（多 API 自動切換）</div>
 
-  <main class="container">
-    <h1 class="page-title">匯率換算</h1>
-    <p class="page-desc">
-      選擇兩種貨幣，輸入金額，即時查詢匯率與換算結果。
-    </p>
+  <div class="container">
+    <div class="glass-box">
+      <div class="title">即時匯率換算</div>
+      <div class="desc">輸入金額與貨幣，系統會自動從多個 API 查詢最穩定的匯率來源。</div>
 
-    <div class="box" style="margin-bottom:16px;">
-      <div class="box-title">輸入金額與貨幣</div>
-      <div class="rate-row">
-        <input id="amountInput" type="number" min="0" step="0.01" value="100" />
-        <select id="fromSelect"></select>
-        <span style="font-size:14px;">轉換為</span>
-        <select id="toSelect"></select>
+      <div class="row">
+        <input id="amount" type="number" value="100" min="0" step="0.01" />
       </div>
-      <button id="convertBtn" class="btn-primary">開始換算</button>
-      <p id="status" class="small"></p>
-    </div>
 
-    <div id="resultBox" class="result-box" style="display:none;">
-      <div class="result-main" id="resultMain"></div>
-      <div class="result-sub" id="resultSub"></div>
-    </div>
+      <div class="row">
+        <select id="from"></select>
+        <select id="to"></select>
+      </div>
 
-    <p class="small" style="margin-top:16px;">
-      小提示：匯率會隨時間變動，本工具適合日常估算，不適合作為精確結算依據。
-    </p>
-  </main>
+      <button id="convert">開始換算</button>
+      <div id="status" class="status"></div>
+
+      <div id="result" class="result" style="display:none;"></div>
+      <div id="sub" class="sub" style="display:none;"></div>
+    </div>
+  </div>
 
   <script>
-    // 主流貨幣列表
-    const currencies = [
-      'USD', // 美元
-      'EUR', // 歐元
-      'CNY', // 人民幣
-      'TWD', // 新台幣
-      'HKD', // 港幣
-      'JPY', // 日元
-      'GBP', // 英鎊
-      'AUD', // 澳元
-      'CAD', // 加元
-      'CHF', // 瑞士法郎
-      'SGD', // 新加坡幣
-      'KRW', // 韓元
-      'THB', // 泰銖
-      'INR', // 盧比
-      'MYR', // 馬幣
+    const currencies = ["USD","EUR","CNY","JPY","HKD","TWD","GBP","AUD","CAD","CHF","SGD","KRW","THB","INR","MYR"];
+
+    const fromSel = document.getElementById("from");
+    const toSel = document.getElementById("to");
+    const amountInput = document.getElementById("amount");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const subEl = document.getElementById("sub");
+
+    currencies.forEach(c => {
+      fromSel.innerHTML += `<option value="${c}">${c}</option>`;
+      toSel.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+
+    fromSel.value = "USD";
+    toSel.value = "CNY";
+
+    // 多 API 列表（依序嘗試）
+    const API_LIST = [
+      (from, to, amount) => `https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`,
+      (from, to, amount) => `https://open.er-api.com/v6/latest/${from}`,
+      (from, to, amount) => `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${amount}`
     ];
 
-    const fromSelect = document.getElementById('fromSelect');
-    const toSelect = document.getElementById('toSelect');
-    const amountInput = document.getElementById('amountInput');
-    const convertBtn = document.getElementById('convertBtn');
-    const status = document.getElementById('status');
-    const resultBox = document.getElementById('resultBox');
-    const resultMain = document.getElementById('resultMain');
-    const resultSub = document.getElementById('resultSub');
+    async function tryAPIs(from, to, amount) {
+      for (let i = 0; i < API_LIST.length; i++) {
+        const url = API_LIST[i](from, to, amount);
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
 
-    // 初始化下拉選單
-    function initSelect(selectEl, defaultValue) {
-      currencies.forEach(code => {
-        const opt = document.createElement('option');
-        opt.value = code;
-        opt.textContent = code;
-        selectEl.appendChild(opt);
-      });
-      if (defaultValue && currencies.includes(defaultValue)) {
-        selectEl.value = defaultValue;
+          const data = await res.json();
+
+          // Frankfurter
+          if (data.rates && data.rates[to]) {
+            return {
+              rate: data.rates[to] / amount,
+              result: data.rates[to],
+              source: "Frankfurter API"
+            };
+          }
+
+          // ER-API
+          if (data.rates && data.rates[to]) {
+            return {
+              rate: data.rates[to],
+              result: amount * data.rates[to],
+              source: "ER-API"
+            };
+          }
+
+          // exchangerate.host
+          if (typeof data.result === "number") {
+            return {
+              rate: data.result / amount,
+              result: data.result,
+              source: "Exchangerate.host"
+            };
+          }
+
+        } catch (e) {
+          continue;
+        }
       }
+      throw new Error("所有 API 都無法取得匯率");
     }
 
-    initSelect(fromSelect, 'USD');
-    initSelect(toSelect, 'CNY');
-
-    // 調用公開匯率 API
-    // 這裡用的是 exchangerate.host 的免費 API（無需註冊）
-    // 文檔示例：https://api.exchangerate.host/convert?from=USD&to=CNY&amount=100
-    async function fetchRateAndConvert() {
+    document.getElementById("convert").addEventListener("click", async () => {
       const amount = parseFloat(amountInput.value);
-      const from = fromSelect.value;
-      const to = toSelect.value;
+      const from = fromSel.value;
+      const to = toSel.value;
 
-      if (isNaN(amount) || amount <= 0) {
-        status.textContent = '請輸入大於 0 的金額。';
-        status.style.color = '#dc2626';
-        resultBox.style.display = 'none';
+      if (!amount || amount <= 0) {
+        statusEl.textContent = "請輸入有效金額";
+        statusEl.style.color = "#f87171";
         return;
       }
 
-      if (from === to) {
-        status.textContent = '相同貨幣之間不需要換算。';
-        status.style.color = '#f97316';
-        resultBox.style.display = 'none';
-        return;
-      }
-
-      status.textContent = '正在查詢匯率，請稍候...';
-      status.style.color = '#6b7280';
-      resultBox.style.display = 'none';
+      statusEl.textContent = "正在查詢匯率...";
+      statusEl.style.color = "#cbd5e1";
 
       try {
-        const url = `https://api.exchangerate.host/convert?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&amount=${encodeURIComponent(amount)}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error('匯率服務響應失敗');
-        }
-        const data = await res.json();
-        if (!data || typeof data.result !== 'number') {
-          throw new Error('未能取得有效的匯率資料');
-        }
+        const { rate, result, source } = await tryAPIs(from, to, amount);
 
-        const resultAmount = data.result;
-        const rate = resultAmount / amount;
+        resultEl.style.display = "block";
+        subEl.style.display = "block";
 
-        status.textContent = '匯率查詢成功。';
-        status.style.color = '#16a34a';
+        resultEl.textContent = `${amount.toFixed(2)} ${from} ≈ ${result.toFixed(2)} ${to}`;
+        subEl.textContent = `匯率來源：${source}（1 ${from} ≈ ${rate.toFixed(4)} ${to}）`;
 
-        resultMain.textContent = `${amount.toFixed(2)} ${from} ≈ ${resultAmount.toFixed(2)} ${to}`;
-        resultSub.textContent = `當前約略匯率：1 ${from} ≈ ${rate.toFixed(4)} ${to}（資料來源：exchangerate.host）`;
-        resultBox.style.display = 'block';
+        statusEl.textContent = "查詢成功";
+        statusEl.style.color = "#4ade80";
+
       } catch (err) {
-        console.error(err);
-        status.textContent = '查詢匯率時出現錯誤，請稍後再試。';
-        status.style.color = '#dc2626';
-        resultBox.style.display = 'none';
-      }
-    }
-
-    convertBtn.addEventListener('click', fetchRateAndConvert);
-
-    // 按 Enter 也觸發換算
-    amountInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        fetchRateAndConvert();
+        statusEl.textContent = "查詢失敗：所有 API 都無法連線";
+        statusEl.style.color = "#f87171";
+        resultEl.style.display = "none";
+        subEl.style.display = "none";
       }
     });
   </script>
