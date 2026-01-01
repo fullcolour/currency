@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>匯率換算｜工具箱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 共用樣式：如果你已有 assets/styles.css，就用下面這行 -->
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .rate-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .rate-row input,
+    .rate-row select {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .rate-row input {
+      flex: 1 1 140px;
+    }
+    .rate-row select {
+      flex: 0 0 120px;
+    }
+    .result-box {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+      font-size: 14px;
+      color: #111827;
+    }
+    .result-main {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .result-sub {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .small-link {
+      font-size: 12px;
+      color: #2563eb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div>
+      <div class="header-title">匯率換算</div>
+      <div class="header-subtitle">支援主流貨幣的即時匯率查詢</div>
+    </div>
+    <a href="../index.html" style="color:#9ca3af;font-size:13px;text-decoration:none;">返回首頁</a>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">匯率換算</h1>
+    <p class="page-desc">
+      選擇兩種貨幣，輸入金額，即時查詢匯率與換算結果。
+      匯率資料來自公開 API（免費方案，適合日常使用）。
+    </p>
+
+    <div class="box" style="margin-bottom:16px;">
+      <div class="box-title">輸入金額與貨幣</div>
+      <div class="rate-row">
+        <input id="amountInput" type="number" min="0" step="0.01" value="100" />
+        <select id="fromSelect"></select>
+        <span style="font-size:14px;">轉換為</span>
+        <select id="toSelect"></select>
+      </div>
+      <button id="convertBtn" class="btn-primary">開始換算</button>
+      <p id="status" class="small"></p>
+    </div>
+
+    <div id="resultBox" class="result-box" style="display:none;">
+      <div class="result-main" id="resultMain"></div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+
+    <p class="small" style="margin-top:16px;">
+      小提示：匯率會隨時間變動，本工具適合日常估算，不適合作為精確結算依據。
+    </p>
+  </main>
+
+  <script>
+    // 主流貨幣列表
+    const currencies = [
+      'USD', // 美元
+      'EUR', // 歐元
+      'CNY', // 人民幣
+      'TWD', // 新台幣
+      'HKD', // 港幣
+      'JPY', // 日元
+      'GBP', // 英鎊
+      'AUD', // 澳元
+      'CAD', // 加元
+      'CHF', // 瑞士法郎
+      'SGD', // 新加坡幣
+      'KRW', // 韓元
+      'THB', // 泰銖
+      'INR', // 盧比
+      'MYR', // 馬幣
+    ];
+
+    const fromSelect = document.getElementById('fromSelect');
+    const toSelect = document.getElementById('toSelect');
+    const amountInput = document.getElementById('amountInput');
+    const convertBtn = document.getElementById('convertBtn');
+    const status = document.getElementById('status');
+    const resultBox = document.getElementById('resultBox');
+    const resultMain = document.getElementById('resultMain');
+    const resultSub = document.getElementById('resultSub');
+
+    // 初始化下拉選單
+    function initSelect(selectEl, defaultValue) {
+      currencies.forEach(code => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = code;
+        selectEl.appendChild(opt);
+      });
+      if (defaultValue && currencies.includes(defaultValue)) {
+        selectEl.value = defaultValue;
+      }
+    }
+
+    initSelect(fromSelect, 'USD');
+    initSelect(toSelect, 'CNY');
+
+    // 調用公開匯率 API
+    // 這裡用的是 exchangerate.host 的免費 API（無需註冊）
+    // 文檔示例：https://api.exchangerate.host/convert?from=USD&to=CNY&amount=100
+    async function fetchRateAndConvert() {
+      const amount = parseFloat(amountInput.value);
+      const from = fromSelect.value;
+      const to = toSelect.value;
+
+      if (isNaN(amount) || amount <= 0) {
+        status.textContent = '請輸入大於 0 的金額。';
+        status.style.color = '#dc2626';
+        resultBox.style.display = 'none';
+        return;
+      }
+
+      if (from === to) {
+        status.textContent = '相同貨幣之間不需要換算。';
+        status.style.color = '#f97316';
+        resultBox.style.display = 'none';
+        return;
+      }
+
+      status.textContent = '正在查詢匯率，請稍候...';
+      status.style.color = '#6b7280';
+      resultBox.style.display = 'none';
+
+      try {
+        const url = `https://api.exchangerate.host/convert?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&amount=${encodeURIComponent(amount)}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error('匯率服務響應失敗');
+        }
+        const data = await res.json();
+        if (!data || typeof data.result !== 'number') {
+          throw new Error('未能取得有效的匯率資料');
+        }
+
+        const resultAmount = data.result;
+        const rate = resultAmount / amount;
+
+        status.textContent = '匯率查詢成功。';
+        status.style.color = '#16a34a';
+
+        resultMain.textContent = `${amount.toFixed(2)} ${from} ≈ ${resultAmount.toFixed(2)} ${to}`;
+        resultSub.textContent = `當前約略匯率：1 ${from} ≈ ${rate.toFixed(4)} ${to}（資料來源：exchangerate.host）`;
+        resultBox.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        status.textContent = '查詢匯率時出現錯誤，請稍後再試。';
+        status.style.color = '#dc2626';
+        resultBox.style.display = 'none';
+      }
+    }
+
+    convertBtn.addEventListener('click', fetchRateAndConvert);
+
+    // 按 Enter 也觸發換算
+    amountInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        fetchRateAndConvert();
+      }
+    });
+  </script>
+</body>
+</html>
